@@ -18,9 +18,7 @@ export default function Signup() {
       const currentUser = await client.signup(user);
       dispatch(setCurrentUser(currentUser));
       router.push("/account/profile");
-    } catch {
-      /* username taken or network error */
-    }
+    } catch {}
   };
 
   return (

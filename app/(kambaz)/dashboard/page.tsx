@@ -218,10 +218,6 @@ export default function Dashboard() {
 
       <hr className="mt-5" />
       <h2 id="wd-dashboard-catalog">Course catalog ({catalogCourses.length})</h2>
-      <p className="text-muted small">
-        Enroll to add a course to your dashboard. Data persists on the server
-        while it is running.
-      </p>
       <hr />
       <Row xs={1} md={5} className="g-4">
         {catalogCourses.map((c) => (

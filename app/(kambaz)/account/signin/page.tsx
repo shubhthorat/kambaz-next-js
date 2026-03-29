@@ -25,9 +25,7 @@ export default function Signin() {
       if (!user) return;
       dispatch(setCurrentUser(user));
       router.push("/dashboard");
-    } catch {
-      /* invalid credentials */
-    }
+    } catch {}
   };
 
   return (
