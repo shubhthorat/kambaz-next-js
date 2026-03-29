@@ -15,6 +15,7 @@ const ROUTES = [
   "/labs/lab2",
   "/labs/lab2/tailwind",
   "/labs/lab3",
+  "/labs/lab5",
   "/courses/1234",
   "/courses/1234/home",
   "/courses/1234/modules",
