@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "ping": "node scripts/ping-pages.mjs"
+    "ping": "node scripts/ping-pages.mjs",
+    "vercel:prod": "npx vercel@latest deploy --prod --yes",
+    "vercel:preview": "npx vercel@latest deploy --yes"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
+    "axios": "^1.14.0",
     "bootstrap": "^5.3.8",
     "next": "16.1.4",
     "react": "19.2.3",

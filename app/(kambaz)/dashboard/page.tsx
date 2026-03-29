@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Row,
@@ -14,9 +14,9 @@ import {
   Form,
 } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addNewCourse, deleteCourse, updateCourse } from "../courses/reducer";
+import { setCourses } from "../courses/reducer";
 import { RootState } from "../store";
-import * as db from "../database";
+import * as client from "../courses/client";
 
 const defaultCourse = {
   _id: "0",
@@ -36,24 +36,71 @@ export default function Dashboard() {
     (state: RootState) => state.accountReducer
   );
   const dispatch = useDispatch();
-  const [course, setCourse] = useState<any>(defaultCourse);
+  const [course, setCourse] = useState<Record<string, unknown>>(defaultCourse);
+  const [allCourses, setAllCourses] = useState<
+    { _id: string; name?: string; description?: string; image?: string }[]
+  >([]);
 
-  const enrolledCourseIds =
-    currentUser && db.enrollments
-      ? db.enrollments
-          .filter((e: any) => e.user === currentUser._id)
-          .map((e: any) => e.course)
-      : [];
-  const displayedCourses = currentUser
-    ? courses.filter((c: any) => enrolledCourseIds.includes(c._id))
-    : courses;
+  useEffect(() => {
+    async function load() {
+      if (!currentUser?._id) return;
+      try {
+        const list = await client.findMyCourses();
+        dispatch(setCourses(list));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    void load();
+  }, [currentUser, dispatch]);
 
-  const addNewCourseHandler = () => {
-    dispatch(addNewCourse(course));
+  useEffect(() => {
+    void (async () => {
+      try {
+        const all = await client.fetchAllCourses();
+        setAllCourses(all);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
+  const onAddNewCourse = async () => {
+    const newCourse = await client.createCourse(course);
+    dispatch(setCourses([...courses, newCourse]));
   };
 
-  const updateCourseHandler = () => {
-    dispatch(updateCourse(course));
+  const onDeleteCourse = async (courseId: string) => {
+    await client.deleteCourse(courseId);
+    dispatch(
+      setCourses(courses.filter((c: { _id: string }) => c._id !== courseId))
+    );
+  };
+
+  const onUpdateCourse = async () => {
+    await client.updateCourse(course as { _id: string });
+    dispatch(
+      setCourses(
+        courses.map((c: { _id: string }) =>
+          c._id === (course as { _id: string })._id ? course : c
+        )
+      )
+    );
+  };
+
+  const enrolledIds = new Set(courses.map((c: { _id: string }) => c._id));
+  const catalogCourses = allCourses.filter((c) => !enrolledIds.has(c._id));
+
+  const onEnroll = async (courseId: string) => {
+    await client.enrollInCourse(courseId);
+    const list = await client.findMyCourses();
+    dispatch(setCourses(list));
+  };
+
+  const onUnenroll = async (courseId: string) => {
+    await client.unenrollFromCourse(courseId);
+    const list = await client.findMyCourses();
+    dispatch(setCourses(list));
   };
 
   return (
@@ -65,26 +112,26 @@ export default function Dashboard() {
         <Button
           className="btn btn-primary float-end"
           id="wd-add-new-course-click"
-          onClick={addNewCourseHandler}
+          onClick={() => void onAddNewCourse()}
         >
           Add
         </Button>
         <Button
           className="btn btn-warning float-end me-2"
           id="wd-update-course-click"
-          onClick={updateCourseHandler}
+          onClick={() => void onUpdateCourse()}
         >
           Update
         </Button>
       </h5>
       <br />
       <Form.Control
-        value={course.name}
+        value={String(course.name ?? "")}
         className="mb-2"
         onChange={(e) => setCourse({ ...course, name: e.target.value })}
       />
       <Form.Control
-        value={course.description}
+        value={String(course.description ?? "")}
         rows={3}
         as="textarea"
         onChange={(e) =>
@@ -93,12 +140,12 @@ export default function Dashboard() {
       />
       <hr />
       <h2 id="wd-dashboard-published">
-        Published Courses ({displayedCourses.length})
+        Published Courses ({courses.length})
       </h2>
       <hr />
       <div id="wd-dashboard-courses">
         <Row xs={1} md={5} className="g-4">
-          {displayedCourses.map((c: any) => (
+          {courses.map((c: Record<string, unknown> & { _id: string }) => (
             <Col
               key={c._id}
               className="wd-dashboard-course"
@@ -110,20 +157,20 @@ export default function Dashboard() {
                   className="wd-dashboard-course-link text-decoration-none text-dark"
                 >
                   <CardImg
-                    src={(c as any).image || "/images/reactjs.jpg"}
+                    src={String(c.image || "/images/reactjs.jpg")}
                     variant="top"
                     width="100%"
                     height={160}
                   />
                   <CardBody className="card-body">
                     <CardTitle className="wd-dashboard-course-title text-nowrap overflow-hidden">
-                      {c.name}
+                      {String(c.name)}
                     </CardTitle>
                     <CardText
                       className="wd-dashboard-course-description overflow-hidden"
                       style={{ height: "100px" }}
                     >
-                      {c.description}
+                      {String(c.description)}
                     </CardText>
                     <Button variant="primary">Go</Button>
                     <Button
@@ -141,12 +188,25 @@ export default function Dashboard() {
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        dispatch(deleteCourse(c._id));
+                        void onDeleteCourse(c._id);
                       }}
-                      className="btn btn-danger float-end"
+                      className="btn btn-danger float-end me-2"
                       id="wd-delete-course-click"
                     >
                       Delete
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="float-end"
+                      id="wd-unenroll-course-click"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void onUnenroll(c._id);
+                      }}
+                    >
+                      Unenroll
                     </Button>
                   </CardBody>
                 </Link>
@@ -155,6 +215,46 @@ export default function Dashboard() {
           ))}
         </Row>
       </div>
+
+      <hr className="mt-5" />
+      <h2 id="wd-dashboard-catalog">Course catalog ({catalogCourses.length})</h2>
+      <p className="text-muted small">
+        Enroll to add a course to your dashboard. Data persists on the server
+        while it is running.
+      </p>
+      <hr />
+      <Row xs={1} md={5} className="g-4">
+        {catalogCourses.map((c) => (
+          <Col key={c._id} style={{ width: "300px" }}>
+            <Card>
+              <CardImg
+                src={String(c.image || "/images/reactjs.jpg")}
+                variant="top"
+                width="100%"
+                height={160}
+              />
+              <CardBody>
+                <CardTitle className="text-nowrap overflow-hidden">
+                  {c.name}
+                </CardTitle>
+                <CardText
+                  className="overflow-hidden small"
+                  style={{ height: "72px" }}
+                >
+                  {c.description}
+                </CardText>
+                <Button
+                  variant="success"
+                  id={`wd-enroll-course-${c._id}`}
+                  onClick={() => void onEnroll(c._id)}
+                >
+                  Enroll
+                </Button>
+              </CardBody>
+            </Card>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 }

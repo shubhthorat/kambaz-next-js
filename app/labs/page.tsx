@@ -34,6 +34,11 @@ export default function Labs() {
             Lab 4: State Management
           </Nav.Link>
         </Nav.Item>
+        <Nav.Item>
+          <Nav.Link as={Link} href="/labs/lab5" id="wd-lab5-link">
+            Lab 5: HTTP / REST
+          </Nav.Link>
+        </Nav.Item>
       </Nav>
       <p className="mt-3">
         <a href="https://github.com/itsjustshubh/kambaz-next-js" id="wd-github">

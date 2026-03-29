@@ -23,7 +23,7 @@ export default function AssignmentEditorModal({
   handleClose: () => void;
   assignment: any;
   setAssignment: (a: any) => void;
-  onSave: () => void;
+  onSave: () => void | Promise<void>;
   isEdit: boolean;
 }) {
   return (
@@ -105,8 +105,7 @@ export default function AssignmentEditorModal({
         <Button
           variant="primary"
           onClick={() => {
-            onSave();
-            handleClose();
+            void Promise.resolve(onSave()).then(() => handleClose());
           }}
         >
           {isEdit ? "Update" : "Add Assignment"}

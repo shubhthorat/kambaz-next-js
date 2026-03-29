@@ -16,7 +16,8 @@ import {
 } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../../store";
-import { updateAssignment } from "../reducer";
+import { setAssignments, updateAssignment } from "../reducer";
+import * as assignmentsClient from "../client";
 
 export default function AssignmentEditor() {
   const { cid, aid } = useParams();
@@ -35,6 +36,19 @@ export default function AssignmentEditor() {
     availableFrom: "",
     availableUntil: "",
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cid) return;
+    void (async () => {
+      setLoading(true);
+      const list = await assignmentsClient.findAssignmentsForCourse(
+        cid as string
+      );
+      dispatch(setAssignments(list));
+      setLoading(false);
+    })();
+  }, [cid, dispatch]);
 
   useEffect(() => {
     if (assignmentFromStore) {
@@ -49,18 +63,22 @@ export default function AssignmentEditor() {
     }
   }, [assignmentFromStore]);
 
-  const handleSave = (e: React.MouseEvent) => {
+  const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!assignmentFromStore) return;
-    dispatch(
-      updateAssignment({
-        ...assignmentFromStore,
-        ...formData,
-      })
+    if (!assignmentFromStore || !cid) return;
+    const updated = { ...assignmentFromStore, ...formData };
+    await assignmentsClient.updateAssignmentOnServer(updated);
+    dispatch(updateAssignment(updated));
+    const list = await assignmentsClient.findAssignmentsForCourse(
+      cid as string
     );
+    dispatch(setAssignments(list));
     router.push(`/courses/${cid}/assignments`);
   };
 
+  if (loading) {
+    return <div>Loading assignment…</div>;
+  }
   if (!assignmentFromStore) {
     return <div>Assignment not found</div>;
   }
@@ -291,7 +309,7 @@ export default function AssignmentEditor() {
               <Button
                 variant="danger"
                 id="wd-save-assignment"
-                onClick={handleSave}
+                onClick={(e) => void handleSave(e)}
               >
                 Save
               </Button>

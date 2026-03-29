@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { BsGripVertical } from "react-icons/bs";
-import { FaCheckCircle, FaEllipsisV, FaPlus, FaSearch, FaPencilAlt, FaTrash } from "react-icons/fa";
-import { RootState } from "../../../store";
 import {
-  addAssignment,
-  deleteAssignment,
-  updateAssignment,
-} from "./reducer";
+  FaCheckCircle,
+  FaEllipsisV,
+  FaPlus,
+  FaSearch,
+  FaPencilAlt,
+  FaTrash,
+} from "react-icons/fa";
+import { RootState } from "../../../store";
+import { setAssignments } from "./reducer";
 import AssignmentEditorModal, {
   defaultAssignment,
 } from "./AssignmentEditorModal";
+import * as assignmentsClient from "./client";
 
 function SectionControls() {
   return (
@@ -76,6 +80,18 @@ export default function Assignments() {
     course: cid,
   });
 
+  const refetchAssignments = useCallback(async () => {
+    if (!cid) return;
+    const list = await assignmentsClient.findAssignmentsForCourse(
+      cid as string
+    );
+    dispatch(setAssignments(list));
+  }, [cid, dispatch]);
+
+  useEffect(() => {
+    void refetchAssignments();
+  }, [refetchAssignments]);
+
   const handleClose = () => {
     setShowModal(false);
     setEditingAssignment(null);
@@ -102,18 +118,23 @@ export default function Assignments() {
     setShowModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!cid) return;
     if (editingAssignment) {
-      dispatch(
-        updateAssignment({
-          ...editingAssignment,
-          ...assignmentForm,
-        })
-      );
+      const merged = { ...editingAssignment, ...assignmentForm };
+      await assignmentsClient.updateAssignmentOnServer(merged);
     } else {
-      dispatch(addAssignment(assignmentForm));
+      await assignmentsClient.createAssignmentForCourse(
+        cid as string,
+        assignmentForm
+      );
     }
-    handleClose();
+    await refetchAssignments();
+  };
+
+  const handleDelete = async (assignmentId: string) => {
+    await assignmentsClient.deleteAssignmentOnServer(assignmentId);
+    await refetchAssignments();
   };
 
   return (
@@ -184,7 +205,7 @@ export default function Assignments() {
               <ItemControls
                 assignmentId={a._id}
                 onEdit={() => handleEdit(a)}
-                onDelete={() => dispatch(deleteAssignment(a._id))}
+                onDelete={() => void handleDelete(a._id)}
               />
             </li>
           ))}

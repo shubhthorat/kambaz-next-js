@@ -6,16 +6,27 @@ import { useSelector, useDispatch } from "react-redux";
 import { setCurrentUser } from "../reducer";
 import { RootState } from "../../store";
 import { Button, Form } from "react-bootstrap";
+import * as client from "../client";
+
+function field(v: unknown) {
+  return v == null ? "" : String(v);
+}
 
 export default function Profile() {
-  const [profile, setProfile] = useState<any>({});
+  const [profile, setProfile] = useState<Record<string, unknown>>({});
   const dispatch = useDispatch();
   const router = useRouter();
   const { currentUser } = useSelector(
     (state: RootState) => state.accountReducer
   );
 
-  const signout = () => {
+  const updateProfile = async () => {
+    const updated = await client.updateUser(profile);
+    dispatch(setCurrentUser(updated));
+  };
+
+  const signout = async () => {
+    await client.signout();
     dispatch(setCurrentUser(null));
     router.push("/account/signin");
   };
@@ -40,7 +51,7 @@ export default function Profile() {
           <Form.Control
             id="wd-username"
             className="mb-2"
-            value={profile.username ?? ""}
+            value={field(profile.username)}
             onChange={(e) =>
               setProfile({ ...profile, username: e.target.value })
             }
@@ -48,7 +59,7 @@ export default function Profile() {
           <Form.Control
             id="wd-password"
             className="mb-2"
-            value={profile.password ?? ""}
+            value={field(profile.password)}
             onChange={(e) =>
               setProfile({ ...profile, password: e.target.value })
             }
@@ -57,7 +68,7 @@ export default function Profile() {
           <Form.Control
             id="wd-firstname"
             className="mb-2"
-            value={profile.firstName ?? ""}
+            value={field(profile.firstName)}
             onChange={(e) =>
               setProfile({ ...profile, firstName: e.target.value })
             }
@@ -65,7 +76,7 @@ export default function Profile() {
           <Form.Control
             id="wd-lastname"
             className="mb-2"
-            value={profile.lastName ?? ""}
+            value={field(profile.lastName)}
             onChange={(e) =>
               setProfile({ ...profile, lastName: e.target.value })
             }
@@ -74,7 +85,7 @@ export default function Profile() {
             id="wd-dob"
             className="mb-2"
             type="date"
-            value={profile.dob ?? ""}
+            value={field(profile.dob)}
             onChange={(e) =>
               setProfile({ ...profile, dob: e.target.value })
             }
@@ -82,7 +93,7 @@ export default function Profile() {
           <Form.Control
             id="wd-email"
             className="mb-2"
-            value={profile.email ?? ""}
+            value={field(profile.email)}
             onChange={(e) =>
               setProfile({ ...profile, email: e.target.value })
             }
@@ -90,7 +101,7 @@ export default function Profile() {
           <select
             className="form-control mb-2"
             id="wd-role"
-            value={profile.role ?? "USER"}
+            value={field(profile.role) || "USER"}
             onChange={(e) =>
               setProfile({ ...profile, role: e.target.value })
             }
@@ -101,8 +112,15 @@ export default function Profile() {
             <option value="STUDENT">Student</option>
           </select>
           <Button
+            onClick={updateProfile}
+            className="btn btn-primary w-100 mb-2"
+            id="wd-update-profile-btn"
+          >
+            Update
+          </Button>
+          <Button
             onClick={signout}
-            className="w-100 mb-2"
+            className="w-100 mb-2 btn-danger wd-signout-btn"
             id="wd-signout-btn"
           >
             Sign out
