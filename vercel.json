@@ -4,6 +4,6 @@
   "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_HTTP_SERVER": "https://cs4550-api.shubhthorat.com",
-    "NEXT_PUBLIC_APP_ORIGIN": "https://cs4550.shubhthorat.com"
+    "NEXT_PUBLIC_APP_ORIGIN": "https://a5.cs4550.shubhthorat.com"
   }
 }
