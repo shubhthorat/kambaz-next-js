@@ -30,6 +30,17 @@ export default function AccountNavigation() {
           </Nav.Link>
         </Nav.Item>
       ))}
+      {currentUser && currentUser.role === "ADMIN" && (
+        <Nav.Item>
+          <Nav.Link
+            as={Link}
+            href="/account/users"
+            active={pathname.includes("/account/users")}
+          >
+            Users
+          </Nav.Link>
+        </Nav.Item>
+      )}
     </Nav>
   );
 }

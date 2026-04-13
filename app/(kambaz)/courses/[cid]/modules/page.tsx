@@ -44,18 +44,26 @@ export default function Modules() {
   };
 
   const onRemoveModule = async (moduleId: string) => {
-    await client.deleteModule(moduleId);
+    if (!cid) return;
+    await client.deleteModule(cid as string, moduleId);
     dispatch(
       setModules(modules.filter((m: { _id: string }) => m._id !== moduleId))
     );
   };
 
   const onUpdateModule = async (module: Record<string, unknown>) => {
-    await client.updateModule(module as { _id: string });
+    if (!cid) return;
+    const { editing: _editing, ...toSave } = module;
+    const updated = await client.updateModule(
+      cid as string,
+      toSave as { _id: string }
+    );
     dispatch(
       setModules(
         modules.map((m: { _id: string }) =>
-          m._id === (module as { _id: string })._id ? module : m
+          m._id === (updated as { _id: string })._id
+            ? { ...(updated as object), editing: false }
+            : m
         )
       )
     );
