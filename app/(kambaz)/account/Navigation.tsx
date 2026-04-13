@@ -1,22 +1,46 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Nav } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 export default function AccountNavigation() {
+  const { currentUser } = useSelector(
+    (state: RootState) => state.accountReducer
+  );
+  const links = currentUser ? ["profile"] : ["signin", "signup"];
   const pathname = usePathname();
-  const linkClass = (path: string) =>
-    `list-group-item border-0 ${pathname === path ? "border-start border-3 border-dark text-dark bg-light" : "text-danger"}`;
+
   return (
-    <div id="wd-account-navigation" className="wd list-group fs-5 rounded-0">
-      <Link href="/account/signin" className={linkClass("/account/signin")}>
-        Sign In
-      </Link>
-      <Link href="/account/signup" className={linkClass("/account/signup")}>
-        Sign Up
-      </Link>
-      <Link href="/account/profile" className={linkClass("/account/profile")}>
-        Profile
-      </Link>
-    </div>
+    <Nav variant="pills" className="flex-column">
+      {links.map((link) => (
+        <Nav.Item key={link}>
+          <Nav.Link
+            as={Link}
+            href={`/account/${link}`}
+            active={pathname.endsWith(link)}
+          >
+            {link === "signin"
+              ? "Sign In"
+              : link === "signup"
+                ? "Sign Up"
+                : "Profile"}
+          </Nav.Link>
+        </Nav.Item>
+      ))}
+      {currentUser && currentUser.role === "ADMIN" && (
+        <Nav.Item>
+          <Nav.Link
+            as={Link}
+            href="/account/users"
+            active={pathname.includes("/account/users")}
+          >
+            Users
+          </Nav.Link>
+        </Nav.Item>
+      )}
+    </Nav>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Form,
@@ -13,13 +14,72 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import * as db from "../../../../database";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../../../store";
+import { setAssignments, updateAssignment } from "../reducer";
+import * as assignmentsClient from "../client";
 
 export default function AssignmentEditor() {
   const { cid, aid } = useParams();
-  const assignment = db.assignments.find((a: any) => a._id === aid);
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { assignments } = useSelector(
+    (state: RootState) => state.assignmentsReducer
+  );
+  const assignmentFromStore = assignments.find((a: any) => a._id === aid);
 
-  if (!assignment) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    points: 100,
+    dueDate: "",
+    availableFrom: "",
+    availableUntil: "",
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cid) return;
+    void (async () => {
+      setLoading(true);
+      const list = await assignmentsClient.findAssignmentsForCourse(
+        cid as string
+      );
+      dispatch(setAssignments(list));
+      setLoading(false);
+    })();
+  }, [cid, dispatch]);
+
+  useEffect(() => {
+    if (assignmentFromStore) {
+      setFormData({
+        title: assignmentFromStore.title,
+        description: assignmentFromStore.description || "",
+        points: assignmentFromStore.points || 100,
+        dueDate: assignmentFromStore.dueDate || "",
+        availableFrom: assignmentFromStore.availableFrom || "",
+        availableUntil: assignmentFromStore.availableUntil || "",
+      });
+    }
+  }, [assignmentFromStore]);
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!assignmentFromStore || !cid) return;
+    const updated = { ...assignmentFromStore, ...formData };
+    await assignmentsClient.updateAssignmentOnServer(updated);
+    dispatch(updateAssignment(updated));
+    const list = await assignmentsClient.findAssignmentsForCourse(
+      cid as string
+    );
+    dispatch(setAssignments(list));
+    router.push(`/courses/${cid}/assignments`);
+  };
+
+  if (loading) {
+    return <div>Loading assignment…</div>;
+  }
+  if (!assignmentFromStore) {
     return <div>Assignment not found</div>;
   }
 
@@ -33,7 +93,10 @@ export default function AssignmentEditor() {
               <FormControl
                 id="wd-name"
                 className="form-control"
-                defaultValue={assignment.title}
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Assignment Name"
               />
             </FormGroup>
@@ -49,7 +112,10 @@ export default function AssignmentEditor() {
                 id="wd-description"
                 className="form-control"
                 rows={10}
-                defaultValue={assignment.description}
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
             </FormGroup>
           </Col>
@@ -63,7 +129,13 @@ export default function AssignmentEditor() {
                 type="number"
                 id="wd-points"
                 className="form-control"
-                defaultValue={assignment.points}
+                value={formData.points}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    points: parseInt(e.target.value) || 0,
+                  })
+                }
               />
             </FormGroup>
           </Col>
@@ -184,7 +256,10 @@ export default function AssignmentEditor() {
                 type="date"
                 id="wd-due-date"
                 className="form-control"
-                defaultValue={assignment.dueDate}
+                value={formData.dueDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
               />
             </FormGroup>
           </Col>
@@ -198,7 +273,10 @@ export default function AssignmentEditor() {
                 type="date"
                 id="wd-available-from"
                 className="form-control"
-                defaultValue={assignment.availableFrom}
+                value={formData.availableFrom}
+                onChange={(e) =>
+                  setFormData({ ...formData, availableFrom: e.target.value })
+                }
               />
             </FormGroup>
           </Col>
@@ -212,7 +290,10 @@ export default function AssignmentEditor() {
                 type="date"
                 id="wd-available-until"
                 className="form-control"
-                defaultValue={assignment.availableUntil}
+                value={formData.availableUntil}
+                onChange={(e) =>
+                  setFormData({ ...formData, availableUntil: e.target.value })
+                }
               />
             </FormGroup>
           </Col>
@@ -225,9 +306,13 @@ export default function AssignmentEditor() {
               <Link href={`/courses/${cid}/assignments`}>
                 <Button variant="secondary">Cancel</Button>
               </Link>
-              <Link href={`/courses/${cid}/assignments`}>
-                <Button variant="danger">Save</Button>
-              </Link>
+              <Button
+                variant="danger"
+                id="wd-save-assignment"
+                onClick={(e) => void handleSave(e)}
+              >
+                Save
+              </Button>
             </div>
           </Col>
         </Row>

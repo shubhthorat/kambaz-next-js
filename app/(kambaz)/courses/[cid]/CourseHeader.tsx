@@ -10,7 +10,13 @@ interface Course {
   description: string;
 }
 
-export default function CourseHeader({ course }: { course?: Course }) {
+export default function CourseHeader({
+  course,
+  onToggleSidebar,
+}: {
+  course?: Course;
+  onToggleSidebar?: () => void;
+}) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const courseIndex = segments.indexOf("courses");
@@ -22,7 +28,13 @@ export default function CourseHeader({ course }: { course?: Course }) {
 
   return (
     <h2 className="text-danger">
-      <FaAlignJustify className="me-4 fs-4 mb-1" />
+      <FaAlignJustify
+        className="me-4 fs-4 mb-1"
+        style={{ cursor: "pointer" }}
+        onClick={onToggleSidebar}
+        role="button"
+        aria-label="Toggle course navigation"
+      />
       {course?.name || "Course"}
       {breadcrumb}
     </h2>

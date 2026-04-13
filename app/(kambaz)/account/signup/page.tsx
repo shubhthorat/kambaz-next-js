@@ -1,36 +1,53 @@
+"use client";
+
 import Link from "next/link";
-import { FormControl } from "react-bootstrap";
+import { useRouter } from "next/navigation";
+import { setCurrentUser } from "../reducer";
+import { useDispatch } from "react-redux";
+import { useState } from "react";
+import { FormControl, Button } from "react-bootstrap";
+import * as client from "../client";
 
 export default function Signup() {
+  const [user, setUser] = useState<Record<string, string>>({});
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const signup = async () => {
+    try {
+      const currentUser = await client.signup(user);
+      dispatch(setCurrentUser(currentUser));
+      router.push("/account/profile");
+    } catch {}
+  };
+
   return (
-    <div id="wd-signup-screen" style={{ maxWidth: 400 }}>
-      <h1>Sign Up</h1>
+    <div id="wd-signup-screen" className="wd-signup-screen" style={{ maxWidth: 400 }}>
+      <h1>Sign up</h1>
       <FormControl
-        type="text"
-        placeholder="Username"
+        value={user.username ?? ""}
+        onChange={(e) => setUser({ ...user, username: e.target.value })}
         className="wd-username mb-2"
-        defaultValue="alice"
+        placeholder="username"
       />
       <FormControl
-        placeholder="Password"
-        type="password"
+        value={user.password ?? ""}
+        onChange={(e) => setUser({ ...user, password: e.target.value })}
         className="wd-password mb-2"
-        defaultValue="123"
-      />
-      <FormControl
-        placeholder="Verify password"
+        placeholder="password"
         type="password"
-        className="wd-password-verify mb-2"
-        defaultValue="123"
       />
-      <Link
-        href="/account/profile"
-        id="wd-signup-btn"
-        className="btn btn-primary w-100 mb-2 d-block text-center text-decoration-none"
+      <Button
+        type="button"
+        onClick={signup}
+        className="wd-signup-btn btn btn-primary mb-2 w-100"
       >
-        Sign Up
+        Sign up
+      </Button>
+      <br />
+      <Link href="/account/signin" className="wd-signin-link">
+        Sign in
       </Link>
-      <Link href="/account/signin">Sign In</Link>
     </div>
   );
 }
