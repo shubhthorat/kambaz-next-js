@@ -16,6 +16,7 @@ import {
 } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../../store";
+import { isFacultyLike } from "../../../../account/roles";
 import { setAssignments, updateAssignment } from "../reducer";
 import * as assignmentsClient from "../client";
 
@@ -23,6 +24,10 @@ export default function AssignmentEditor() {
   const { cid, aid } = useParams();
   const router = useRouter();
   const dispatch = useDispatch();
+  const { currentUser } = useSelector(
+    (state: RootState) => state.accountReducer
+  );
+  const readOnly = !isFacultyLike(currentUser);
   const { assignments } = useSelector(
     (state: RootState) => state.assignmentsReducer
   );
@@ -65,6 +70,7 @@ export default function AssignmentEditor() {
 
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!assignmentFromStore || !cid) return;
     const updated = { ...assignmentFromStore, ...formData };
     await assignmentsClient.updateAssignmentOnServer(updated);
@@ -86,6 +92,7 @@ export default function AssignmentEditor() {
   return (
     <div id="wd-assignments-editor" className="p-3">
       <Form>
+        <fieldset disabled={readOnly}>
         <Row className="mb-3">
           <Col>
             <FormGroup>
@@ -299,6 +306,7 @@ export default function AssignmentEditor() {
           </Col>
         </Row>
 
+        </fieldset>
         <Row>
           <Col>
             <hr />
@@ -306,13 +314,15 @@ export default function AssignmentEditor() {
               <Link href={`/courses/${cid}/assignments`}>
                 <Button variant="secondary">Cancel</Button>
               </Link>
-              <Button
-                variant="danger"
-                id="wd-save-assignment"
-                onClick={(e) => void handleSave(e)}
-              >
-                Save
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="danger"
+                  id="wd-save-assignment"
+                  onClick={(e) => void handleSave(e)}
+                >
+                  Save
+                </Button>
+              )}
             </div>
           </Col>
         </Row>

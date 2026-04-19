@@ -14,6 +14,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { RootState } from "../../../store";
+import { isFacultyLike } from "../../../account/roles";
 import { setAssignments } from "./reducer";
 import AssignmentEditorModal, {
   defaultAssignment,
@@ -34,11 +35,14 @@ function ItemControls({
   assignmentId,
   onEdit,
   onDelete,
+  readOnly,
 }: {
   assignmentId: string;
   onEdit: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
+  if (readOnly) return null;
   return (
     <div className="float-end">
       <FaPencilAlt
@@ -67,6 +71,10 @@ function ItemControls({
 
 export default function Assignments() {
   const { cid } = useParams();
+  const { currentUser } = useSelector(
+    (state: RootState) => state.accountReducer
+  );
+  const readOnly = !isFacultyLike(currentUser);
   const { assignments } = useSelector(
     (state: RootState) => state.assignmentsReducer
   );
@@ -155,25 +163,29 @@ export default function Assignments() {
             aria-label="Search for Assignments"
           />
         </div>
-        <button
-          type="button"
-          className="btn btn-danger btn-lg float-end ms-1"
-          id="wd-add-assignment"
-          onClick={handleShowAdd}
-        >
-          <FaPlus
-            className="position-relative me-2"
-            style={{ bottom: "1px" }}
-          />
-          Assignment
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-lg float-end"
-          id="wd-add-assignment-group"
-        >
-          Group
-        </button>
+        {!readOnly && (
+          <>
+            <button
+              type="button"
+              className="btn btn-danger btn-lg float-end ms-1"
+              id="wd-add-assignment"
+              onClick={handleShowAdd}
+            >
+              <FaPlus
+                className="position-relative me-2"
+                style={{ bottom: "1px" }}
+              />
+              Assignment
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-lg float-end"
+              id="wd-add-assignment-group"
+            >
+              Group
+            </button>
+          </>
+        )}
       </div>
       <br />
       <br />
@@ -206,20 +218,23 @@ export default function Assignments() {
                 assignmentId={a._id}
                 onEdit={() => handleEdit(a)}
                 onDelete={() => void handleDelete(a._id)}
+                readOnly={readOnly}
               />
             </li>
           ))}
         </ul>
       </div>
 
-      <AssignmentEditorModal
-        show={showModal}
-        handleClose={handleClose}
-        assignment={assignmentForm}
-        setAssignment={setAssignmentForm}
-        onSave={handleSave}
-        isEdit={!!editingAssignment}
-      />
+      {!readOnly && (
+        <AssignmentEditorModal
+          show={showModal}
+          handleClose={handleClose}
+          assignment={assignmentForm}
+          setAssignment={setAssignmentForm}
+          onSave={handleSave}
+          isEdit={!!editingAssignment}
+        />
+      )}
     </div>
   );
 }

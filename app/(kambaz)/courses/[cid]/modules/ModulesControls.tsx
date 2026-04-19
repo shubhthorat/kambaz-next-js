@@ -16,12 +16,17 @@ export default function ModulesControls({
   moduleName,
   setModuleName,
   addModule,
+  readOnly,
 }: {
   moduleName: string;
   setModuleName: (title: string) => void;
   addModule: () => void;
+  readOnly?: boolean;
 }) {
   const [show, setShow] = useState(false);
+  if (readOnly) {
+    return null;
+  }
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
