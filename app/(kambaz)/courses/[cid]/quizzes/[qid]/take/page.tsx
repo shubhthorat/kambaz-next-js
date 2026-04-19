@@ -43,15 +43,7 @@ export default function QuizTakePage() {
       setAttempt(res);
       setAnswers((res.answers as Record<string, unknown>) || {});
     } catch (e: unknown) {
-      const msg =
-        typeof e === "object" &&
-        e !== null &&
-        "response" in e &&
-        typeof (e as { response?: { data?: { message?: string } } }).response
-          ?.data?.message === "string"
-          ? (e as { response: { data: { message: string } } }).response.data
-              .message
-          : "Submit failed.";
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Submit failed.";
       setErr(msg);
     }
   };

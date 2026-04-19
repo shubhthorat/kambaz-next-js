@@ -29,7 +29,6 @@ export default function QuizEditPage() {
   const { currentUser } = useSelector((s: RootState) => s.accountReducer);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [tab, setTab] = useState<"details" | "questions">("details");
-  /** false = preview mode (rubric), true = full edit */
   const [questionEditOpen, setQuestionEditOpen] = useState<
     Record<string, boolean>
   >({});
