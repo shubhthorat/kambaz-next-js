@@ -16,6 +16,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setCourses } from "../courses/reducer";
 import { RootState } from "../store";
+import { isFacultyLike } from "../account/roles";
 import * as client from "../courses/client";
 
 const defaultCourse = {
@@ -42,6 +43,7 @@ export default function Dashboard() {
   const { currentUser } = useSelector(
     (state: RootState) => state.accountReducer
   );
+  const faculty = isFacultyLike(currentUser);
   const dispatch = useDispatch();
   const [course, setCourse] = useState<Record<string, unknown>>(defaultCourse);
   const [allCourses, setAllCourses] = useState<CourseCard[]>([]);
@@ -140,38 +142,48 @@ export default function Dashboard() {
         </div>
       </div>
       <hr />
-      <h5>
-        New Course
-        <Button
-          className="btn btn-primary float-end"
-          id="wd-add-new-course-click"
-          onClick={() => void onAddNewCourse()}
-        >
-          Add
-        </Button>
-        <Button
-          className="btn btn-warning float-end me-2"
-          id="wd-update-course-click"
-          onClick={() => void onUpdateCourse()}
-        >
-          Update
-        </Button>
-      </h5>
-      <br />
-      <Form.Control
-        value={String(course.name ?? "")}
-        className="mb-2"
-        onChange={(e) => setCourse({ ...course, name: e.target.value })}
-      />
-      <Form.Control
-        value={String(course.description ?? "")}
-        rows={3}
-        as="textarea"
-        onChange={(e) =>
-          setCourse({ ...course, description: e.target.value })
-        }
-      />
-      <hr />
+      {faculty && (
+        <>
+          <h5>
+            New Course
+            <Button
+              className="btn btn-primary float-end"
+              id="wd-add-new-course-click"
+              onClick={() => void onAddNewCourse()}
+            >
+              Add
+            </Button>
+            <Button
+              className="btn btn-warning float-end me-2"
+              id="wd-update-course-click"
+              onClick={() => void onUpdateCourse()}
+            >
+              Update
+            </Button>
+          </h5>
+          <br />
+          <Form.Control
+            value={String(course.name ?? "")}
+            className="mb-2"
+            onChange={(e) => setCourse({ ...course, name: e.target.value })}
+          />
+          <Form.Control
+            value={String(course.description ?? "")}
+            rows={3}
+            as="textarea"
+            onChange={(e) =>
+              setCourse({ ...course, description: e.target.value })
+            }
+          />
+          <hr />
+        </>
+      )}
+      {!faculty && view === "my" && courses.length === 0 && (
+        <p className="text-muted mb-3">
+          You are not enrolled in any courses yet. Open{" "}
+          <strong>All Courses</strong> to enroll.
+        </p>
+      )}
       {view === "my" && (
         <>
           <h2 id="wd-dashboard-published">
@@ -208,28 +220,32 @@ export default function Dashboard() {
                           {String(c.description)}
                         </CardText>
                         <Button variant="primary">Go</Button>
-                        <Button
-                          id="wd-edit-course-click"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            setCourse(c);
-                          }}
-                          className="btn btn-warning me-2 float-end"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            void onDeleteCourse(c._id);
-                          }}
-                          className="btn btn-danger float-end me-2"
-                          id="wd-delete-course-click"
-                        >
-                          Delete
-                        </Button>
+                        {faculty && (
+                          <>
+                            <Button
+                              id="wd-edit-course-click"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                setCourse(c);
+                              }}
+                              className="btn btn-warning me-2 float-end"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                void onDeleteCourse(c._id);
+                              }}
+                              className="btn btn-danger float-end me-2"
+                              id="wd-delete-course-click"
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
                       </CardBody>
                     </Link>
                   </Card>

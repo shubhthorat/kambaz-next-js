@@ -14,10 +14,13 @@ import {
   updateModule,
 } from "./reducer";
 import { RootState } from "../../../store";
+import { isFacultyLike } from "../../../account/roles";
 import * as client from "../../client";
 
 export default function Modules() {
   const { cid } = useParams();
+  const { currentUser } = useSelector((state: RootState) => state.accountReducer);
+  const readOnly = !isFacultyLike(currentUser);
   const [moduleName, setModuleName] = useState("");
   const { modules } = useSelector(
     (state: RootState) => state.modulesReducer
@@ -75,6 +78,7 @@ export default function Modules() {
         moduleName={moduleName}
         setModuleName={setModuleName}
         addModule={() => void onCreateModuleForCourse()}
+        readOnly={readOnly}
       />
       <br />
       <br />
@@ -109,6 +113,7 @@ export default function Modules() {
                 moduleId={module._id}
                 deleteModule={(moduleId) => void onRemoveModule(moduleId)}
                 editModule={(moduleId) => dispatch(editModule(moduleId))}
+                readOnly={readOnly}
               />
             </div>
             {module.lessons && (
@@ -120,7 +125,7 @@ export default function Modules() {
                   >
                     <BsGripVertical className="me-2 fs-3" />
                     {lesson.name}
-                    <LessonControlButtons />
+                    <LessonControlButtons readOnly={readOnly} />
                   </ListGroup.Item>
                 ))}
               </ListGroup>

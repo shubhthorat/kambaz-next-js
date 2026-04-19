@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { setCurrentUser } from "../reducer";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
-import { FormControl, Button } from "react-bootstrap";
+import { FormControl, FormSelect, Button, Form } from "react-bootstrap";
 import * as client from "../client";
 
 export default function Signup() {
-  const [user, setUser] = useState<Record<string, string>>({});
+  const [user, setUser] = useState<Record<string, string>>({
+    role: "STUDENT",
+  });
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -37,6 +39,16 @@ export default function Signup() {
         placeholder="password"
         type="password"
       />
+      <Form.Label className="mb-1">I am signing up as</Form.Label>
+      <FormSelect
+        className="mb-2"
+        value={user.role ?? "STUDENT"}
+        onChange={(e) => setUser({ ...user, role: e.target.value })}
+        aria-label="Account role"
+      >
+        <option value="STUDENT">Student</option>
+        <option value="FACULTY">Faculty</option>
+      </FormSelect>
       <Button
         type="button"
         onClick={signup}
