@@ -20,7 +20,11 @@ export default function Labs() {
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link as={Link} href="/labs/lab2/tailwind" id="wd-lab2-tailwind-link">
+          <Nav.Link
+            as={Link}
+            href="/labs/lab2/tailwind"
+            id="wd-lab2-tailwind-link"
+          >
             Lab 2: Tailwind CSS
           </Nav.Link>
         </Nav.Item>
@@ -41,7 +45,7 @@ export default function Labs() {
         </Nav.Item>
       </Nav>
       <p className="mt-3">
-        <a href="https://github.com/itsjustshubh/kambaz-next-js" id="wd-github">
+        <a href="https://github.com/shubhthorat/kambaz-next-js" id="wd-github">
           GitHub Repository
         </a>
       </p>

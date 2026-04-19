@@ -60,7 +60,7 @@ export default function TOC() {
         Kambaz
       </Link>
       <a
-        href="https://github.com/itsjustshubh/kambaz-next-js"
+        href="https://github.com/shubhthorat/kambaz-next-js"
         id="wd-github-link"
         className="nav-link"
         target="_blank"
