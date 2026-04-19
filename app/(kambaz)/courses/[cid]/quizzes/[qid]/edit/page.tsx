@@ -87,7 +87,7 @@ export default function QuizEditPage() {
       ...quiz,
       questions: [...(quiz.questions ?? []), nq],
     });
-    setQuestionEditOpen((m) => ({ ...m, [nq._id]: false }));
+    setQuestionEditOpen((m) => ({ ...m, [nq._id]: true }));
   };
 
   const openQuestionEdit = (q: QuizQuestion) => {
