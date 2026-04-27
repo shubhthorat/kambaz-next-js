@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Form, Card, Alert } from "react-bootstrap";
+import { Button, Form, Card, Alert, Spinner } from "react-bootstrap";
 import * as client from "../../client";
 import type { Quiz, QuizQuestion } from "../../client";
 import type { QuizAttempt } from "../../client";
@@ -17,6 +17,9 @@ export default function QuizTakePage() {
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiByQuestion, setAiByQuestion] = useState<
+    Record<string, { loading: boolean; text?: string; error?: string }>
+  >({});
 
   useEffect(() => {
     if (!qid) return;
@@ -46,6 +49,31 @@ export default function QuizTakePage() {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Submit failed.";
       setErr(msg);
     }
+  };
+
+  const requestAiExplain = (questionId: string) => {
+    if (!qid) return;
+    setAiByQuestion((m) => ({
+      ...m,
+      [questionId]: { loading: true },
+    }));
+    void client
+      .postQuizAiExplain(qid as string, questionId)
+      .then((text) => {
+        setAiByQuestion((m) => ({
+          ...m,
+          [questionId]: { loading: false, text },
+        }));
+      })
+      .catch((e: unknown) => {
+        const msg =
+          (e as { response?: { data?: { message?: string } } })?.response?.data
+            ?.message ?? "Could not load AI explanation.";
+        setAiByQuestion((m) => ({
+          ...m,
+          [questionId]: { loading: false, error: msg },
+        }));
+      });
   };
 
   if (loading) return <div className="p-3">Loading…</div>;
@@ -148,6 +176,41 @@ export default function QuizTakePage() {
                 >
                   {row.correct ? "✓ Correct" : "✗ Incorrect"} ({row.pointsEarned}/
                   {q.points})
+                </div>
+              )}
+              {showResults &&
+                row &&
+                quiz.showCorrectAnswers !== "Never" &&
+                !row.correct && (
+                <div className="mt-3 border-top pt-3">
+                  <div className="small text-muted mb-2">
+                    AI study note (Perplexity Sonar) — may be inaccurate; use your
+                    course materials as the source of truth.
+                  </div>
+                  {!aiByQuestion[q._id]?.text && !aiByQuestion[q._id]?.loading && (
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => requestAiExplain(q._id)}
+                    >
+                      {aiByQuestion[q._id]?.error
+                        ? "Try AI explanation again"
+                        : "Explain this question (AI)"}
+                    </Button>
+                  )}
+                  {aiByQuestion[q._id]?.loading && (
+                    <Spinner animation="border" size="sm" className="ms-2" />
+                  )}
+                  {aiByQuestion[q._id]?.error && (
+                    <Alert variant="warning" className="mt-2 mb-0 py-2 small">
+                      {aiByQuestion[q._id].error}
+                    </Alert>
+                  )}
+                  {aiByQuestion[q._id]?.text && (
+                    <Alert variant="light" className="mt-2 mb-0 small">
+                      {aiByQuestion[q._id].text}
+                    </Alert>
+                  )}
                 </div>
               )}
             </Card.Body>

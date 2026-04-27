@@ -109,3 +109,12 @@ export const getMyAttemptCount = async (quizId: string) => {
   );
   return data.count;
 };
+
+/** Perplexity-backed study blurb for a question (server uses PPLX_API_KEY). Student attempts only. */
+export const postQuizAiExplain = async (quizId: string, questionId: string) => {
+  const { data } = await axiosWithCredentials.post<{ explanation: string }>(
+    `${QUIZZES_API}/${quizId}/ai/explain`,
+    { questionId }
+  );
+  return data.explanation;
+};
